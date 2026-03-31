@@ -16,26 +16,10 @@ services:
       - ./data:/app/data
     networks:
       - email_network
+    expose:
+      - "7374"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:7374/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-      args:
-        - REACT_APP_API_URL=http://187.124.224.233:1482/api
-    container_name: email_sender_frontend
-    restart: unless-stopped
-    depends_on:
-      - backend
-    networks:
-      - email_network
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:80"]
+      test: ["CMD", "curl", "-f", "http://localhost:7374/api/health"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -49,7 +33,6 @@ services:
     volumes:
       - ./nginx-proxy.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - frontend
       - backend
     networks:
       - email_network
@@ -57,6 +40,3 @@ services:
 networks:
   email_network:
     driver: bridge
-
-volumes:
-  data:
