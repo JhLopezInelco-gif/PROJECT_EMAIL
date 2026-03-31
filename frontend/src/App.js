@@ -9,6 +9,7 @@ import CargarCSV from './components/CargarCSV';
 import EnviarCorreos from './components/EnviarCorreos';
 import Campanas from './components/Campanas';
 import Logs from './components/Logs';
+import ConfiguracionSMTP from './components/ConfiguracionSMTP';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -113,6 +114,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Logs />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/configuracion-smtp"
+            element={
+              <ProtectedRoute>
+                <ConfiguracionSMTP />
               </ProtectedRoute>
             }
           />

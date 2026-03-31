@@ -59,3 +59,27 @@ class EmailCampaign(Base):
     
     def __repr__(self):
         return f"<EmailCampaign(id={self.id}, name='{self.name}', status='{self.status}')>"
+
+
+class SMTPConfig(Base):
+    """Model for SMTP configuration settings"""
+    __tablename__ = "smtp_configs"
+    
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    name = Column(String(255), default="Configuración Principal")
+    host = Column(String(255), nullable=False)
+    port = Column(Integer, nullable=False, default=587)
+    username = Column(String(255), nullable=False)
+    password = Column(String(255), nullable=False)
+    from_email = Column(String(255), nullable=False)
+    from_name = Column(String(255), default="Sistema de Correos")
+    use_tls = Column(Boolean, default=True)
+    use_ssl = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
+    is_default = Column(Boolean, default=False)
+    timeout = Column(Integer, default=30)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    def __repr__(self):
+        return f"<SMTPConfig(id={self.id}, host='{self.host}', username='{self.username}')>"

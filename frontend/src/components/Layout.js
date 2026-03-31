@@ -18,6 +18,7 @@ const Layout = ({ children }) => {
     { path: '/enviar', icon: 'bi-envelope-plus', label: 'Enviar Correos' },
     { path: '/campanas', icon: 'bi-megaphone', label: 'Campañas' },
     { path: '/logs', icon: 'bi-list-check', label: 'Registros' },
+    { path: '/configuracion-smtp', icon: 'bi-gear', label: 'Config. SMTP' },
   ];
 
   return (
