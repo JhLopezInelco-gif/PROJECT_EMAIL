@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:7374/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:7373/api';
 
 // Export API_BASE for direct fetch calls
 export const API_BASE = API_URL;
