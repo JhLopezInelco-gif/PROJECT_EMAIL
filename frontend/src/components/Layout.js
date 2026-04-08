@@ -46,6 +46,25 @@ const Layout = ({ children }) => {
               {item.label}
             </NavLink>
           ))}
+          
+          {/* Inventario TI Section */}
+          <div className="mt-3 mb-1 px-3">
+            <small className="text-uppercase text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '0.1em' }}>
+              Inventario TI
+            </small>
+          </div>
+          <NavLink to="/inventario/equipos" className={({ isActive }) => `nav-item-custom ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-pc-display"></i>Equipos
+          </NavLink>
+          <NavLink to="/inventario/memorias-ram" className={({ isActive }) => `nav-item-custom ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-memory"></i>Memoria RAM
+          </NavLink>
+          <NavLink to="/inventario/almacenamiento" className={({ isActive }) => `nav-item-custom ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-hdd"></i>Almacenamiento
+          </NavLink>
+          <NavLink to="/inventario/salida-bodega" className={({ isActive }) => `nav-item-custom ${isActive ? 'active' : ''}`}>
+            <i className="bi bi-box-arrow-up"></i>Salida de Bodega
+          </NavLink>
         </nav>
         
         <div className="mt-auto p-3 border-top border-secondary">

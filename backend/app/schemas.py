@@ -250,3 +250,153 @@ class SMTPTestResponse(BaseModel):
     success: bool
     message: str
     details: Optional[str] = None
+
+
+# ==========================================
+# INVENTARIO TI - Schemas
+# ==========================================
+
+# --- Equipos ---
+class EquipoBase(BaseModel):
+    nombre_equipo: Optional[str] = None
+    puesto: Optional[str] = None
+    nombre_usuario: Optional[str] = None
+    empleado: Optional[str] = None
+    marca: Optional[str] = None
+    estado_licencia: Optional[str] = None
+
+class EquipoCreate(EquipoBase):
+    pass
+
+class EquipoUpdate(BaseModel):
+    nombre_equipo: Optional[str] = None
+    puesto: Optional[str] = None
+    nombre_usuario: Optional[str] = None
+    empleado: Optional[str] = None
+    marca: Optional[str] = None
+    estado_licencia: Optional[str] = None
+
+class EquipoResponse(EquipoBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class EquipoListResponse(BaseModel):
+    items: List[EquipoResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+# --- Memorias RAM ---
+class MemoriaRAMBase(BaseModel):
+    tipo: Optional[str] = None
+    capacidad: Optional[str] = None
+    equipo: Optional[str] = None
+    cantidad: Optional[int] = 0
+    disponible: Optional[int] = 0
+    asignado: Optional[int] = 0
+    observaciones: Optional[str] = None
+
+class MemoriaRAMCreate(MemoriaRAMBase):
+    pass
+
+class MemoriaRAMUpdate(BaseModel):
+    tipo: Optional[str] = None
+    capacidad: Optional[str] = None
+    equipo: Optional[str] = None
+    cantidad: Optional[int] = None
+    disponible: Optional[int] = None
+    asignado: Optional[int] = None
+    observaciones: Optional[str] = None
+
+class MemoriaRAMResponse(MemoriaRAMBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class MemoriaRAMListResponse(BaseModel):
+    items: List[MemoriaRAMResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+# --- Almacenamiento ---
+class AlmacenamientoBase(BaseModel):
+    cantidad: Optional[int] = 0
+    tipo: Optional[str] = None
+    capacidad: Optional[str] = None
+    marca: Optional[str] = None
+    disponible: Optional[int] = 0
+    asignados: Optional[int] = 0
+    asignado_por: Optional[str] = None
+    responsable: Optional[str] = None
+
+class AlmacenamientoCreate(AlmacenamientoBase):
+    pass
+
+class AlmacenamientoUpdate(BaseModel):
+    cantidad: Optional[int] = None
+    tipo: Optional[str] = None
+    capacidad: Optional[str] = None
+    marca: Optional[str] = None
+    disponible: Optional[int] = None
+    asignados: Optional[int] = None
+    asignado_por: Optional[str] = None
+    responsable: Optional[str] = None
+
+class AlmacenamientoResponse(AlmacenamientoBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class AlmacenamientoListResponse(BaseModel):
+    items: List[AlmacenamientoResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+# --- Salida Bodega ---
+class SalidaBodegaBase(BaseModel):
+    cantidad: Optional[int] = 0
+    periferico: Optional[str] = None
+    marca: Optional[str] = None
+    modelo_serie: Optional[str] = None
+    asignado: Optional[str] = None
+    retirado_por: Optional[str] = None
+
+class SalidaBodegaCreate(SalidaBodegaBase):
+    pass
+
+class SalidaBodegaUpdate(BaseModel):
+    cantidad: Optional[int] = None
+    periferico: Optional[str] = None
+    marca: Optional[str] = None
+    modelo_serie: Optional[str] = None
+    asignado: Optional[str] = None
+    retirado_por: Optional[str] = None
+
+class SalidaBodegaResponse(SalidaBodegaBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class SalidaBodegaListResponse(BaseModel):
+    items: List[SalidaBodegaResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

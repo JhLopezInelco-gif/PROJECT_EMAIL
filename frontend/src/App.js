@@ -10,6 +10,10 @@ import EnviarCorreos from './components/EnviarCorreos';
 import Campanas from './components/Campanas';
 import Logs from './components/Logs';
 import ConfiguracionSMTP from './components/ConfiguracionSMTP';
+import EquiposInventario from './components/EquiposInventario';
+import MemoriasRAM from './components/MemoriasRAM';
+import AlmacenamientoInv from './components/AlmacenamientoInv';
+import SalidaBodega from './components/SalidaBodega';
 
 // Protected Route Component
 const ProtectedRoute = ({ children }) => {
@@ -124,6 +128,23 @@ function App() {
                 <ConfiguracionSMTP />
               </ProtectedRoute>
             }
+          />
+          
+          <Route
+            path="/inventario/equipos"
+            element={<ProtectedRoute><EquiposInventario /></ProtectedRoute>}
+          />
+          <Route
+            path="/inventario/memorias-ram"
+            element={<ProtectedRoute><MemoriasRAM /></ProtectedRoute>}
+          />
+          <Route
+            path="/inventario/almacenamiento"
+            element={<ProtectedRoute><AlmacenamientoInv /></ProtectedRoute>}
+          />
+          <Route
+            path="/inventario/salida-bodega"
+            element={<ProtectedRoute><SalidaBodega /></ProtectedRoute>}
           />
           
           {/* Default Redirect */}

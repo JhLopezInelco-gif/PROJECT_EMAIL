@@ -276,4 +276,4 @@ MIT License
 
 ## 👨‍💻 Autor
 
-Generado para gestión de envío de correos masivos
+Generado para gestión de envío de correos masivosss ajustando cambios
