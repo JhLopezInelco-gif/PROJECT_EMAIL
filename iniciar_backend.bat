@@ -43,7 +43,7 @@ echo ============================================
 
 :restart
 echo [%date% %time%] Iniciando servidor...
-uvicorn app.main:app --host 127.0.0.1 --port 7374
+uvicorn app.main:app --host 127.0.0.1 --port 7373
 
 :: Si el servidor se detiene inesperadamente, reiniciarlo
 echo.

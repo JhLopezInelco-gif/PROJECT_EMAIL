@@ -169,3 +169,234 @@ class MessageResponse(BaseModel):
     """Generic message response"""
     message: str
     success: bool = True
+
+
+# SMTP Configuration Schemas
+class SMTPConfigBase(BaseModel):
+    """Base schema for SMTP configuration"""
+    name: Optional[str] = "Configuración Principal"
+    host: str = Field(..., min_length=1, max_length=255)
+    port: int = Field(default=587, ge=1, le=65535)
+    username: str = Field(..., min_length=1, max_length=255)
+    password: str = Field(..., min_length=1, max_length=255)
+    from_email: EmailStr
+    from_name: Optional[str] = "Sistema de Correos"
+    use_tls: bool = True
+    use_ssl: bool = False
+    timeout: int = Field(default=30, ge=5, le=300)
+
+
+class SMTPConfigCreate(SMTPConfigBase):
+    """Schema for creating SMTP configuration"""
+    is_default: Optional[bool] = False
+
+
+class SMTPConfigUpdate(BaseModel):
+    """Schema for updating SMTP configuration"""
+    name: Optional[str] = None
+    host: Optional[str] = None
+    port: Optional[int] = Field(None, ge=1, le=65535)
+    username: Optional[str] = None
+    password: Optional[str] = None
+    from_email: Optional[EmailStr] = None
+    from_name: Optional[str] = None
+    use_tls: Optional[bool] = None
+    use_ssl: Optional[bool] = None
+    is_active: Optional[bool] = None
+    is_default: Optional[bool] = None
+    timeout: Optional[int] = Field(None, ge=5, le=300)
+
+
+class SMTPConfigResponse(BaseModel):
+    """Schema for SMTP configuration response"""
+    id: int
+    name: str
+    host: str
+    port: int
+    username: str
+    from_email: str
+    from_name: str
+    use_tls: bool
+    use_ssl: bool
+    is_active: bool
+    is_default: bool
+    timeout: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+
+class SMTPConfigListResponse(BaseModel):
+    """Schema for list of SMTP configurations"""
+    items: List[SMTPConfigResponse]
+    total: int
+
+
+class SMTPTestRequest(BaseModel):
+    """Schema for testing SMTP connection"""
+    host: str
+    port: int
+    username: str
+    password: str
+    use_tls: bool = True
+    use_ssl: bool = False
+    test_email: Optional[EmailStr] = None
+
+
+class SMTPTestResponse(BaseModel):
+    """Schema for SMTP test response"""
+    success: bool
+    message: str
+    details: Optional[str] = None
+
+
+# ==========================================
+# INVENTARIO TI - Schemas
+# ==========================================
+
+# --- Equipos ---
+class EquipoBase(BaseModel):
+    nombre_equipo: Optional[str] = None
+    puesto: Optional[str] = None
+    nombre_usuario: Optional[str] = None
+    empleado: Optional[str] = None
+    marca: Optional[str] = None
+    estado_licencia: Optional[str] = None
+
+class EquipoCreate(EquipoBase):
+    pass
+
+class EquipoUpdate(BaseModel):
+    nombre_equipo: Optional[str] = None
+    puesto: Optional[str] = None
+    nombre_usuario: Optional[str] = None
+    empleado: Optional[str] = None
+    marca: Optional[str] = None
+    estado_licencia: Optional[str] = None
+
+class EquipoResponse(EquipoBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class EquipoListResponse(BaseModel):
+    items: List[EquipoResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+# --- Memorias RAM ---
+class MemoriaRAMBase(BaseModel):
+    tipo: Optional[str] = None
+    capacidad: Optional[str] = None
+    equipo: Optional[str] = None
+    cantidad: Optional[int] = 0
+    disponible: Optional[int] = 0
+    asignado: Optional[int] = 0
+    observaciones: Optional[str] = None
+
+class MemoriaRAMCreate(MemoriaRAMBase):
+    pass
+
+class MemoriaRAMUpdate(BaseModel):
+    tipo: Optional[str] = None
+    capacidad: Optional[str] = None
+    equipo: Optional[str] = None
+    cantidad: Optional[int] = None
+    disponible: Optional[int] = None
+    asignado: Optional[int] = None
+    observaciones: Optional[str] = None
+
+class MemoriaRAMResponse(MemoriaRAMBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class MemoriaRAMListResponse(BaseModel):
+    items: List[MemoriaRAMResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+# --- Almacenamiento ---
+class AlmacenamientoBase(BaseModel):
+    cantidad: Optional[int] = 0
+    tipo: Optional[str] = None
+    capacidad: Optional[str] = None
+    marca: Optional[str] = None
+    disponible: Optional[int] = 0
+    asignados: Optional[int] = 0
+    asignado_por: Optional[str] = None
+    responsable: Optional[str] = None
+
+class AlmacenamientoCreate(AlmacenamientoBase):
+    pass
+
+class AlmacenamientoUpdate(BaseModel):
+    cantidad: Optional[int] = None
+    tipo: Optional[str] = None
+    capacidad: Optional[str] = None
+    marca: Optional[str] = None
+    disponible: Optional[int] = None
+    asignados: Optional[int] = None
+    asignado_por: Optional[str] = None
+    responsable: Optional[str] = None
+
+class AlmacenamientoResponse(AlmacenamientoBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class AlmacenamientoListResponse(BaseModel):
+    items: List[AlmacenamientoResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int
+
+
+# --- Salida Bodega ---
+class SalidaBodegaBase(BaseModel):
+    cantidad: Optional[int] = 0
+    periferico: Optional[str] = None
+    marca: Optional[str] = None
+    modelo_serie: Optional[str] = None
+    asignado: Optional[str] = None
+    retirado_por: Optional[str] = None
+
+class SalidaBodegaCreate(SalidaBodegaBase):
+    pass
+
+class SalidaBodegaUpdate(BaseModel):
+    cantidad: Optional[int] = None
+    periferico: Optional[str] = None
+    marca: Optional[str] = None
+    modelo_serie: Optional[str] = None
+    asignado: Optional[str] = None
+    retirado_por: Optional[str] = None
+
+class SalidaBodegaResponse(SalidaBodegaBase):
+    id: int
+    created_at: datetime
+    updated_at: datetime
+    class Config:
+        from_attributes = True
+
+class SalidaBodegaListResponse(BaseModel):
+    items: List[SalidaBodegaResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

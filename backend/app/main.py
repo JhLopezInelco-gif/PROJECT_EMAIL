@@ -10,7 +10,7 @@ import time
 
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, correos, emails
+from app.routers import auth, correos, emails, smtp_config, inventario
 
 # Configure logging
 logging.basicConfig(
@@ -93,6 +93,8 @@ async def general_exception_handler(request: Request, exc: Exception):
 app.include_router(auth.router, prefix="/api")
 app.include_router(correos.router, prefix="/api")
 app.include_router(emails.router, prefix="/api")
+app.include_router(smtp_config.router, prefix="/api")
+app.include_router(inventario.router, prefix="/api")
 
 
 # Startup event

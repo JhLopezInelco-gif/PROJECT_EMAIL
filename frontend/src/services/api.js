@@ -1,6 +1,9 @@
 import axios from 'axios';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:7374/api';
+const API_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:7373/api';
+
+// Export API_BASE for direct fetch calls
+export const API_BASE = API_URL;
 
 // Create axios instance
 const api = axios.create({
@@ -131,6 +134,102 @@ export const emailsAPI = {
   getStats: async () => {
     const response = await api.get('/emails/stats');
     return response.data;
+  },
+};
+
+// Inventario TI API
+export const inventarioAPI = {
+  // Equipos
+  equipos: {
+    list: async (params = {}) => {
+      const response = await api.get('/inventario/equipos', { params });
+      return response.data;
+    },
+    get: async (id) => {
+      const response = await api.get(`/inventario/equipos/${id}`);
+      return response.data;
+    },
+    create: async (data) => {
+      const response = await api.post('/inventario/equipos', data);
+      return response.data;
+    },
+    update: async (id, data) => {
+      const response = await api.put(`/inventario/equipos/${id}`, data);
+      return response.data;
+    },
+    delete: async (id) => {
+      const response = await api.delete(`/inventario/equipos/${id}`);
+      return response.data;
+    },
+  },
+  // Memorias RAM
+  memorias: {
+    list: async (params = {}) => {
+      const response = await api.get('/inventario/memorias-ram', { params });
+      return response.data;
+    },
+    get: async (id) => {
+      const response = await api.get(`/inventario/memorias-ram/${id}`);
+      return response.data;
+    },
+    create: async (data) => {
+      const response = await api.post('/inventario/memorias-ram', data);
+      return response.data;
+    },
+    update: async (id, data) => {
+      const response = await api.put(`/inventario/memorias-ram/${id}`, data);
+      return response.data;
+    },
+    delete: async (id) => {
+      const response = await api.delete(`/inventario/memorias-ram/${id}`);
+      return response.data;
+    },
+  },
+  // Almacenamiento
+  almacenamiento: {
+    list: async (params = {}) => {
+      const response = await api.get('/inventario/almacenamiento', { params });
+      return response.data;
+    },
+    get: async (id) => {
+      const response = await api.get(`/inventario/almacenamiento/${id}`);
+      return response.data;
+    },
+    create: async (data) => {
+      const response = await api.post('/inventario/almacenamiento', data);
+      return response.data;
+    },
+    update: async (id, data) => {
+      const response = await api.put(`/inventario/almacenamiento/${id}`, data);
+      return response.data;
+    },
+    delete: async (id) => {
+      const response = await api.delete(`/inventario/almacenamiento/${id}`);
+      return response.data;
+    },
+  },
+  // Salida Bodega
+  salidaBodega: {
+    list: async (params = {}) => {
+      const response = await api.get('/inventario/salida-bodega', { params });
+      return response.data;
+    },
+    get: async (id) => {
+      const response = await api.get(`/inventario/salida-bodega/${id}`);
+      return response.data;
+    },
+    create: async (data) => {
+      const response = await api.post('/inventario/salida-bodega', data);
+      return response.data;
+    },
+    update: async (id, data) => {
+      const response = await api.put(`/inventario/salida-bodega/${id}`, data);
+      return response.data;
+    },
+    delete: async (id) => {
+      const response = await api.delete(`/inventario/salida-bodega/${id}`);
+      return response.data;
+    },
   },
 };
 
