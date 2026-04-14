@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { correosAPI, emailsAPI } from '../services/api';
 import { toast, ToastContainer } from 'react-toastify';
 
@@ -9,13 +9,13 @@ const EnviarCorreos = () => {
   const [sending, setSending] = useState(false);
   const [campaignId, setCampaignId] = useState(null);
   const [progress, setProgress] = useState(null);
-  
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterTipo, setFilterTipo] = useState('');
+
   const [formData, setFormData] = useState({
     subject: '',
     body: '',
-    sendToAll: true,
-    filter_tipo_tercero: '',
-    selectedIds: [],
   });
 
   useEffect(() => {
@@ -51,6 +51,9 @@ const EnviarCorreos = () => {
       ]);
       setCorreos(correosData.items);
       setTipos(tiposData);
+      // Select all by default
+      const allIds = new Set(correosData.items.map(c => c.id));
+      setSelectedIds(allIds);
     } catch (error) {
       toast.error('Error al cargar los datos');
     } finally {
@@ -59,31 +62,101 @@ const EnviarCorreos = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
-      [name]: type === 'checkbox' ? checked : value,
+      [name]: value,
     }));
+  };
+
+  // Filtered correos based on search and tipo filter
+  const filteredCorreos = useMemo(() => {
+    let result = correos;
+    if (filterTipo) {
+      result = result.filter(c => c.tipo_tercero === filterTipo);
+    }
+    if (searchTerm.trim()) {
+      const term = searchTerm.toLowerCase();
+      result = result.filter(c =>
+        c.email.toLowerCase().includes(term) ||
+        (c.razon_social && c.razon_social.toLowerCase().includes(term)) ||
+        (c.codigo && c.codigo.toLowerCase().includes(term))
+      );
+    }
+    return result;
+  }, [correos, filterTipo, searchTerm]);
+
+  // IDs of filtered correos
+  const filteredIds = useMemo(() => {
+    return new Set(filteredCorreos.map(c => c.id));
+  }, [filteredCorreos]);
+
+  // Selected count from filtered view
+  const selectedInFilterCount = useMemo(() => {
+    let count = 0;
+    filteredIds.forEach(id => {
+      if (selectedIds.has(id)) count++;
+    });
+    return count;
+  }, [selectedIds, filteredIds]);
+
+  const allFilteredSelected = filteredCorreos.length > 0 && selectedInFilterCount === filteredCorreos.length;
+
+  const handleToggleAll = () => {
+    if (allFilteredSelected) {
+      // Deselect all in current filter
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        filteredIds.forEach(id => next.delete(id));
+        return next;
+      });
+    } else {
+      // Select all in current filter
+      setSelectedIds(prev => {
+        const next = new Set(prev);
+        filteredIds.forEach(id => next.add(id));
+        return next;
+      });
+    }
+  };
+
+  const handleToggleOne = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAll = () => {
+    const allIds = new Set(correos.map(c => c.id));
+    setSelectedIds(allIds);
+  };
+
+  const handleDeselectAll = () => {
+    setSelectedIds(new Set());
   };
 
   const handleSendEmails = async (e) => {
     e.preventDefault();
-    
+
     if (!formData.subject || !formData.body) {
       toast.error('Por favor complete el asunto y el cuerpo del correo');
       return;
     }
 
-    const recipients = formData.sendToAll 
-      ? correos.filter(c => !formData.filter_tipo_tercero || c.tipo_tercero === formData.filter_tipo_tercero)
-      : correos.filter(c => formData.selectedIds.includes(c.id));
-
-    if (recipients.length === 0) {
-      toast.error('No hay destinatarios seleccionados');
+    if (selectedIds.size === 0) {
+      toast.error('Debe seleccionar al menos un destinatario');
       return;
     }
 
-    if (!window.confirm(`¿Está seguro de enviar correos a ${recipients.length} destinatarios?`)) {
+    const recipientCount = selectedIds.size;
+
+    if (!window.confirm(`¿Está seguro de enviar correos a ${recipientCount} destinatarios?`)) {
       return;
     }
 
@@ -94,13 +167,8 @@ const EnviarCorreos = () => {
       const payload = {
         subject: formData.subject,
         body: formData.body,
+        recipient_ids: Array.from(selectedIds),
       };
-
-      if (!formData.sendToAll && formData.selectedIds.length > 0) {
-        payload.recipient_ids = formData.selectedIds;
-      } else if (formData.filter_tipo_tercero) {
-        payload.filter_tipo_tercero = formData.filter_tipo_tercero;
-      }
 
       const response = await emailsAPI.send(payload);
       setCampaignId(response.campaign_id);
@@ -124,10 +192,6 @@ const EnviarCorreos = () => {
     }
   };
 
-  const filteredCorreos = formData.filter_tipo_tercero
-    ? correos.filter(c => c.tipo_tercero === formData.filter_tipo_tercero)
-    : correos;
-
   if (loading) {
     return (
       <div className="loading-spinner">
@@ -146,7 +210,7 @@ const EnviarCorreos = () => {
       </div>
 
       <div className="row">
-        <div className="col-lg-8">
+        <div className="col-lg-7">
           <div className="email-composer">
             <form onSubmit={handleSendEmails}>
               <div className="p-3 border-bottom">
@@ -196,7 +260,7 @@ const EnviarCorreos = () => {
                 <button
                   type="submit"
                   className="btn btn-success btn-lg"
-                  disabled={sending || correos.length === 0}
+                  disabled={sending || selectedIds.size === 0}
                 >
                   {sending ? (
                     <>
@@ -206,7 +270,7 @@ const EnviarCorreos = () => {
                   ) : (
                     <>
                       <i className="bi bi-envelope-check me-2"></i>
-                      Enviar Correos ({formData.sendToAll ? filteredCorreos.length : formData.selectedIds.length} destinatarios)
+                      Enviar Correos ({selectedIds.size} destinatario{selectedIds.size !== 1 ? 's' : ''})
                     </>
                   )}
                 </button>
@@ -221,7 +285,7 @@ const EnviarCorreos = () => {
                 <i className="bi bi-graph-up me-2"></i>
                 Progreso del Envío
               </h5>
-              
+
               <div className="progress-info">
                 <span>
                   <strong>{progress.sent}</strong> de <strong>{progress.total}</strong> correos enviados
@@ -230,7 +294,7 @@ const EnviarCorreos = () => {
                   {progress.status}
                 </span>
               </div>
-              
+
               <div className="progress mb-3" style={{ height: '25px' }}>
                 <div
                   className="progress-bar progress-bar-striped progress-bar-animated"
@@ -266,34 +330,44 @@ const EnviarCorreos = () => {
           )}
         </div>
 
-        <div className="col-lg-4">
+        <div className="col-lg-5">
           <div className="stats-card">
             <h5 className="mb-3">
               <i className="bi bi-people me-2"></i>
               Destinatarios
+              <span className="badge bg-primary ms-2">{selectedIds.size} seleccionado{selectedIds.size !== 1 ? 's' : ''}</span>
             </h5>
 
-            <div className="form-check form-switch mb-3">
-              <input
-                className="form-check-input"
-                type="checkbox"
-                id="sendToAll"
-                name="sendToAll"
-                checked={formData.sendToAll}
-                onChange={handleInputChange}
-              />
-              <label className="form-check-label" htmlFor="sendToAll">
-                Enviar a todos
-              </label>
+            {/* Search */}
+            <div className="mb-3">
+              <div className="input-group">
+                <span className="input-group-text"><i className="bi bi-search"></i></span>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Buscar por email, nombre o código..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                {searchTerm && (
+                  <button
+                    className="btn btn-outline-secondary"
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                  >
+                    <i className="bi bi-x"></i>
+                  </button>
+                )}
+              </div>
             </div>
 
+            {/* Filter by tipo */}
             <div className="mb-3">
               <label className="form-label">Filtrar por tipo:</label>
               <select
                 className="form-select"
-                name="filter_tipo_tercero"
-                value={formData.filter_tipo_tercero}
-                onChange={handleInputChange}
+                value={filterTipo}
+                onChange={(e) => setFilterTipo(e.target.value)}
               >
                 <option value="">Todos los tipos</option>
                 {tipos.map(tipo => (
@@ -302,32 +376,93 @@ const EnviarCorreos = () => {
               </select>
             </div>
 
-            <div className="alert alert-info">
-              <i className="bi bi-info-circle me-2"></i>
-              <strong>{filteredCorreos.length}</strong> contactos seleccionados
+            {/* Quick actions */}
+            <div className="d-flex gap-2 mb-3">
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-primary flex-fill"
+                onClick={handleSelectAll}
+              >
+                <i className="bi bi-check-all me-1"></i>Seleccionar todos ({correos.length})
+              </button>
+              <button
+                type="button"
+                className="btn btn-sm btn-outline-danger flex-fill"
+                onClick={handleDeselectAll}
+              >
+                <i className="bi bi-x-lg me-1"></i>Ninguno
+              </button>
             </div>
 
-            <hr />
+            {/* Select All in current filter */}
+            {filteredCorreos.length > 0 && (
+              <div className="form-check mb-2 px-0 d-flex align-items-center border-bottom pb-2">
+                <input
+                  className="form-check-input me-2"
+                  type="checkbox"
+                  id="selectAllFiltered"
+                  checked={allFilteredSelected}
+                  onChange={handleToggleAll}
+                  style={{ cursor: 'pointer' }}
+                />
+                <label className="form-check-label fw-bold w-100" htmlFor="selectAllFiltered" style={{ cursor: 'pointer' }}>
+                  <small>
+                    {allFilteredSelected ? 'Deseleccionar' : 'Seleccionar'} todos los visibles
+                    ({filteredCorreos.length} contacto{filteredCorreos.length !== 1 ? 's' : ''})
+                  </small>
+                </label>
+              </div>
+            )}
 
+            {/* Info alert */}
+            <div className={`alert ${selectedIds.size > 0 ? 'alert-success' : 'alert-warning'} py-2 mb-3`}>
+              <i className={`bi ${selectedIds.size > 0 ? 'bi-check-circle' : 'bi-exclamation-triangle'} me-2`}></i>
+              <strong>{selectedIds.size}</strong> de {correos.length} contactos seleccionados
+              {selectedIds.size === 0 && (
+                <><br /><small>Debe seleccionar al menos un destinatario para enviar</small></>
+              )}
+            </div>
+
+            {/* Recipient list with checkboxes */}
             <h6>Vista previa de destinatarios:</h6>
             <div className="recipient-selector">
-              {filteredCorreos.slice(0, 10).map(correo => (
-                <div key={correo.id} className="recipient-item">
-                  <i className="bi bi-envelope text-primary me-2"></i>
-                  <div>
-                    <small className="d-block text-truncate">{correo.email}</small>
-                    {correo.razon_social && (
-                      <small className="text-muted text-truncate d-block">
-                        {correo.razon_social}
-                      </small>
-                    )}
+              {filteredCorreos.length === 0 ? (
+                <div className="text-center p-3 text-muted">
+                  <i className="bi bi-inbox d-block" style={{ fontSize: '2rem' }}></i>
+                  <small>No se encontraron contactos</small>
+                </div>
+              ) : (
+                filteredCorreos.map(correo => (
+                  <div
+                    key={correo.id}
+                    className="recipient-item"
+                    style={{ cursor: 'pointer', backgroundColor: selectedIds.has(correo.id) ? 'rgba(13, 110, 253, 0.05)' : 'transparent' }}
+                    onClick={() => handleToggleOne(correo.id)}
+                  >
+                    <input
+                      className="form-check-input me-3"
+                      type="checkbox"
+                      checked={selectedIds.has(correo.id)}
+                      onChange={() => handleToggleOne(correo.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      style={{ cursor: 'pointer', flexShrink: 0 }}
+                    />
+                    <i className="bi bi-envelope text-primary me-2" style={{ flexShrink: 0 }}></i>
+                    <div style={{ minWidth: 0, flex: 1 }}>
+                      <small className="d-block text-truncate fw-semibold">{correo.email}</small>
+                      {correo.razon_social && (
+                        <small className="text-muted text-truncate d-block">
+                          {correo.razon_social}
+                        </small>
+                      )}
+                      {correo.tipo_tercero && (
+                        <span className="badge bg-light text-dark mt-1" style={{ fontSize: '0.65rem' }}>
+                          {correo.tipo_tercero}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-              {filteredCorreos.length > 10 && (
-                <div className="text-center p-2 text-muted">
-                  <small>...y {filteredCorreos.length - 10} más</small>
-                </div>
+                ))
               )}
             </div>
           </div>

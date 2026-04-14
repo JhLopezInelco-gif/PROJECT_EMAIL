@@ -5,7 +5,7 @@ color 0B
 echo ============================================
 echo   DIAGNOSTICO DEL SISTEMA DE CORREOS
 echo ============================================
-echo.
+echo. 
 
 :: 1. Verificar puerto del backend (7373)
 echo [1] Verificando Backend (puerto 7373)...

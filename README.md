@@ -242,7 +242,7 @@ Código,Razón social,Tipo de tercero,Numero identificacion,Email
 ### Gmail
 ```env
 SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
+SMTP_PORT=465
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
 ```
@@ -258,7 +258,7 @@ SMTP_PASSWORD=your-password
 ### SendGrid
 ```env
 SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
+SMTP_PORT=465
 SMTP_USER=apikey
 SMTP_PASSWORD=your-sendgrid-api-key
 ```

@@ -13,7 +13,9 @@ const ConfiguracionSMTP = () => {
   const [formData, setFormData] = useState({
     name: 'Configuración Principal',
     host: '',
-    port: 587,
+    port: 467
+    
+    ,
     username: '',
     password: '',
     from_email: '',

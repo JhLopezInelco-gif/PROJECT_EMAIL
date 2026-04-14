@@ -89,25 +89,31 @@ class EmailService:
         logger.info(f"🔍 Verificando conexión SMTP a {self.host}:{self.port}...")
         
         try:
-            # Create SMTP connection
+            # Create SMTP connection - choose between SMTP and SMTP_SSL based on port/security
             logger.debug(f"   Creando conexión SMTP...")
-            server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
+            if self.port == 465 or self.security.upper() == 'SSL':
+                logger.debug(f"   Usando SMTP_SSL para puerto {self.port}")
+                server = smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout)
+            else:
+                logger.debug(f"   Usando SMTP estándar para puerto {self.port}")
+                server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
             
             # Enable debug output
             server.set_debuglevel(1 if settings.DEBUG else 0)
             
-            # Get server greeting
-            logger.debug(f"   Esperando greeting del servidor...")
-            code, msg = server.connect(self.host, self.port)
-            logger.info(f"   ✅ Conectado: {code} {msg.decode() if isinstance(msg, bytes) else msg}")
+            # Get server greeting (only for non-SSL connections)
+            if self.port != 465 and self.security.upper() != 'SSL':
+                logger.debug(f"   Esperando greeting del servidor...")
+                code, msg = server.connect(self.host, self.port)
+                logger.info(f"   ✅ Conectado: {code} {msg.decode() if isinstance(msg, bytes) else msg}")
             
             # Identify ourselves
             logger.debug(f"   Enviando EHLO...")
             code, msg = server.ehlo()
             logger.info(f"   ✅ EHLO: {code}")
             
-            # Check STARTTLS support
-            if self.security.upper() == 'STARTTLS':
+            # Check STARTTLS support (only for non-SSL connections)
+            if self.port != 465 and self.security.upper() == 'STARTTLS':
                 logger.debug(f"   Iniciando STARTTLS...")
                 if server.has_extn('STARTTLS'):
                     code, msg = server.starttls()
@@ -193,9 +199,14 @@ class EmailService:
             # Create message
             msg = self._create_message(to_email, subject, body)
             
-            # Connect to SMTP server
+            # Connect to SMTP server - choose between SMTP and SMTP_SSL based on port/security
             logger.debug(f"   Conectando a {self.host}:{self.port}...")
-            server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
+            if self.port == 465 or self.security.upper() == 'SSL':
+                logger.debug(f"   Usando SMTP_SSL para puerto {self.port}")
+                server = smtplib.SMTP_SSL(self.host, self.port, timeout=self.timeout)
+            else:
+                logger.debug(f"   Usando SMTP estándar para puerto {self.port}")
+                server = smtplib.SMTP(self.host, self.port, timeout=self.timeout)
             
             try:
                 # Enable debug output
@@ -205,8 +216,8 @@ class EmailService:
                 code, msg_response = server.ehlo()
                 logger.debug(f"   EHLO: {code}")
                 
-                # STARTTLS if configured
-                if self.security.upper() == 'STARTTLS':
+                # STARTTLS if configured (only for non-SSL connections)
+                if self.port != 465 and self.security.upper() == 'STARTTLS':
                     if server.has_extn('STARTTLS'):
                         code, msg_response = server.starttls()
                         logger.debug(f"   STARTTLS: {code}")
