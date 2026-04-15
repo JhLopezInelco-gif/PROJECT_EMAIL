@@ -285,7 +285,7 @@ def test_smtp_connection(
 @router.post("/test/{config_id}", response_model=SMTPTestResponse)
 def test_existing_smtp_config(
     config_id: int,
-    test_email: str = None,
+    test_email: str = "",
     db: Session = Depends(get_db)
 ):
     """Test an existing SMTP configuration"""
@@ -303,7 +303,7 @@ def test_existing_smtp_config(
         password=config.password,
         use_tls=config.use_tls,
         use_ssl=config.use_ssl,
-        test_email=test_email
+        test_email=test_email if test_email and "@" in test_email else None
     )
     
     return test_smtp_connection(test_data, db)

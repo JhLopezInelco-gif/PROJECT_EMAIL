@@ -41,20 +41,74 @@ class EmailService:
     """Service for sending emails with improved SMTP handling"""
     
     def __init__(self):
-        self.host = settings.SMTP_HOST
-        self.port = settings.SMTP_PORT
-        self.username = settings.SMTP_USER
-        self.password = settings.SMTP_PASSWORD
-        self.from_email = settings.smtp_from_email
-        self.from_name = settings.SMTP_FROM_NAME
-        self.security = settings.SMTP_SECURITY
-        self.timeout = settings.SMTP_TIMEOUT
+        # Try to load from database first, fall back to .env settings
+        db_config = self._load_smtp_from_db()
+        if db_config:
+            self.host = db_config['host']
+            self.port = db_config['port']
+            self.username = db_config['username']
+            self.password = db_config['password']
+            self.from_email = db_config['from_email']
+            self.from_name = db_config['from_name']
+            self.security = 'SSL' if db_config['use_ssl'] else ('STARTTLS' if db_config['use_tls'] else 'NONE')
+            self.timeout = db_config.get('timeout', 30)
+            logger.info("[SMTP] Config loaded from DATABASE")
+        else:
+            # Fallback to .env settings
+            self.host = settings.SMTP_HOST
+            self.port = settings.SMTP_PORT
+            self.username = settings.SMTP_USER
+            self.password = settings.SMTP_PASSWORD
+            self.from_email = settings.smtp_from_email
+            self.from_name = settings.SMTP_FROM_NAME
+            self.security = settings.SMTP_SECURITY
+            self.timeout = settings.SMTP_TIMEOUT
+            logger.info("[SMTP] Config loaded from .env (fallback, no DB config found)")
         
-        logger.info(f"📧 EmailService inicializado:")
+        logger.info(f"[SMTP] EmailService inicializado:")
         logger.info(f"   Host: {self.host}:{self.port}")
         logger.info(f"   User: {self.username}")
         logger.info(f"   Security: {self.security}")
         logger.info(f"   From: {self.from_name} <{self.from_email}>")
+    
+    @staticmethod
+    def _load_smtp_from_db():
+        """Load SMTP configuration from database (active/default config)"""
+        try:
+            from app.models import SMTPConfig as SMTPConfigModel
+            db = SessionLocal()
+            try:
+                # First try active default config
+                config = db.query(SMTPConfigModel).filter(
+                    SMTPConfigModel.is_default == True,
+                    SMTPConfigModel.is_active == True
+                ).first()
+                # Then try any active config
+                if not config:
+                    config = db.query(SMTPConfigModel).filter(
+                        SMTPConfigModel.is_active == True
+                    ).first()
+                # Then try any config at all
+                if not config:
+                    config = db.query(SMTPConfigModel).first()
+                if config:
+                    return {
+                        'host': config.host,
+                        'port': config.port,
+                        'username': config.username,
+                        'password': config.password,
+                        'from_email': config.from_email,
+                        'from_name': config.from_name,
+                        'use_ssl': config.use_ssl,
+                        'use_tls': config.use_tls,
+                        'timeout': config.timeout,
+                    }
+                return None
+            finally:
+                db.close()
+        except Exception as e:
+            logger.warning(f"[SMTP] Could not load from DB: {e}")
+            return None
     
     def _create_message(self, to_email: str, subject: str, body: str) -> MIMEMultipart:
         """Create an email message with proper headers"""
@@ -101,16 +155,10 @@ class EmailService:
             # Enable debug output
             server.set_debuglevel(1 if settings.DEBUG else 0)
             
-            # Get server greeting (only for non-SSL connections)
-            if self.port != 465 and self.security.upper() != 'SSL':
-                logger.debug(f"   Esperando greeting del servidor...")
-                code, msg = server.connect(self.host, self.port)
-                logger.info(f"   ✅ Conectado: {code} {msg.decode() if isinstance(msg, bytes) else msg}")
-            
             # Identify ourselves
             logger.debug(f"   Enviando EHLO...")
             code, msg = server.ehlo()
-            logger.info(f"   ✅ EHLO: {code}")
+            logger.info(f"   EHLO: {code}")
             
             # Check STARTTLS support (only for non-SSL connections)
             if self.port != 465 and self.security.upper() == 'STARTTLS':
