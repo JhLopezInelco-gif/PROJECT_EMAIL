@@ -174,15 +174,15 @@ class MessageResponse(BaseModel):
 # SMTP Configuration Schemas
 class SMTPConfigBase(BaseModel):
     """Base schema for SMTP configuration"""
-    name: Optional[str] = "Configuración Principal"
+    name: Optional[str] = "Configuracion Principal"
     host: str = Field(..., min_length=1, max_length=255)
-    port: int = Field(default=587, ge=1, le=65535)
+    port: int = Field(default=465, ge=1, le=65535)
     username: str = Field(..., min_length=1, max_length=255)
     password: str = Field(..., min_length=1, max_length=255)
     from_email: EmailStr
     from_name: Optional[str] = "Sistema de Correos"
-    use_tls: bool = True
-    use_ssl: bool = False
+    use_tls: bool = False
+    use_ssl: bool = True
     timeout: int = Field(default=30, ge=5, le=300)
 
 
@@ -239,9 +239,9 @@ class SMTPTestRequest(BaseModel):
     host: str
     port: int
     username: str
-    password: str
-    use_tls: bool = True
-    use_ssl: bool = False
+    password: Optional[str] = None
+    use_tls: bool = False
+    use_ssl: bool = True
     test_email: Optional[EmailStr] = None
 
 

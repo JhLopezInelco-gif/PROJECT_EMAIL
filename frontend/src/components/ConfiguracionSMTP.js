@@ -13,15 +13,13 @@ const ConfiguracionSMTP = () => {
   const [formData, setFormData] = useState({
     name: 'Configuración Principal',
     host: '',
-    port: 467
-    
-    ,
+    port: 465,
     username: '',
     password: '',
     from_email: '',
     from_name: 'Sistema de Correos',
-    use_tls: true,
-    use_ssl: false,
+    use_tls: false,
+    use_ssl: true,
     timeout: 30,
     is_default: false
   });
@@ -76,10 +74,19 @@ const ConfiguracionSMTP = () => {
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : (type === 'number' ? parseInt(value) : value)
-    }));
+    setFormData(prev => {
+      const newData = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : (type === 'number' ? parseInt(value) : value)
+      };
+      // Mutual exclusion: SSL and TLS cannot be active simultaneously
+      if (name === 'use_ssl' && checked) {
+        newData.use_tls = false;
+      } else if (name === 'use_tls' && checked) {
+        newData.use_ssl = false;
+      }
+      return newData;
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -94,8 +101,13 @@ const ConfiguracionSMTP = () => {
       const method = editingId ? 'PUT' : 'POST';
       
       const submitData = { ...formData };
+      // Remove password only if editing and password is empty
       if (!submitData.password && editingId) {
         delete submitData.password;
+      }
+      // Auto-set from_email to username if empty (Hostinger requires same address)
+      if (!submitData.from_email && submitData.username) {
+        submitData.from_email = submitData.username;
       }
       
       const response = await fetch(url, {
@@ -124,8 +136,12 @@ const ConfiguracionSMTP = () => {
   };
 
   const testConnection = async (useTestEmail = false) => {
-    if (!formData.host || !formData.username || (!formData.password && !editingId)) {
-      showMessage('error', 'Complete host, usuario y contraseña para probar');
+    if (!formData.host || !formData.username) {
+      showMessage('error', 'Complete host y usuario para probar');
+      return;
+    }
+    if (!formData.password && !editingId) {
+      showMessage('error', 'Ingrese la contraseña para probar');
       return;
     }
     
@@ -138,19 +154,36 @@ const ConfiguracionSMTP = () => {
     
     try {
       const token = localStorage.getItem('token');
+      
+      // If editing and no new password, test using saved config via config_id endpoint
+      if (editingId && !formData.password) {
+        const response = await fetch(`${API_BASE}/smtp-config/test/${editingId}?test_email=${useTestEmail ? testEmail : ''}`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+          showMessage('success', `✅ ${result.message}`);
+        } else {
+          showMessage('error', `❌ ${result.message}: ${result.details || ''}`);
+        }
+        return;
+      }
+      
       const testData = {
         host: formData.host,
         port: formData.port,
         username: formData.username,
+        password: formData.password,
         use_tls: formData.use_tls,
         use_ssl: formData.use_ssl,
         test_email: useTestEmail ? testEmail : null
       };
-      
-      // Solo incluir password si se proporcionó
-      if (formData.password) {
-        testData.password = formData.password;
-      }
       
       const response = await fetch(`${API_BASE}/smtp-config/test`, {
         method: 'POST',
@@ -234,13 +267,13 @@ const ConfiguracionSMTP = () => {
         setFormData({
           name: 'Nueva Configuración',
           host: '',
-          port: 587,
+          port: 465,
           username: '',
           password: '',
           from_email: '',
           from_name: 'Sistema de Correos',
-          use_tls: true,
-          use_ssl: false,
+          use_tls: false,
+          use_ssl: true,
           timeout: 30,
           is_default: false
         });
@@ -271,13 +304,13 @@ const ConfiguracionSMTP = () => {
     setFormData({
       name: 'Nueva Configuración',
       host: '',
-      port: 587,
+      port: 465,
       username: '',
       password: '',
       from_email: '',
       from_name: 'Sistema de Correos',
-      use_tls: true,
-      use_ssl: false,
+      use_tls: false,
+      use_ssl: true,
       timeout: 30,
       is_default: false
     });
@@ -657,10 +690,13 @@ const ConfiguracionSMTP = () => {
               </h6>
               <ul className="list-unstyled mb-0 small">
                 <li className="mb-2">
+                  <strong>Hostinger:</strong> smtp.hostinger.com:465 (SSL)
+                </li>
+                <li className="mb-2">
                   <strong>Gmail:</strong> smtp.gmail.com:587 (STARTTLS)
                 </li>
                 <li className="mb-2">
-                  <strong>Outlook:</strong> smtp.office365.com:587
+                  <strong>Outlook:</strong> smtp.office365.com:587 (STARTTLS)
                 </li>
                 <li className="mb-2">
                   <strong>Yahoo:</strong> smtp.mail.yahoo.com:465 (SSL)
