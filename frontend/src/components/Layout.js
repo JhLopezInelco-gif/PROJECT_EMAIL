@@ -48,8 +48,8 @@ const Layout = ({ children }) => {
           ))}
           
           {/* Inventario TI Section */}
-          <div className="mt-3 mb-1 px-3">
-            <small className="text-uppercase text-muted fw-bold" style={{ fontSize: '0.7rem', letterSpacing: '0.1em' }}>
+          <div className="mt-3 mb-1 px-3 text-blue-50" >
+            <small className="text-uppercase text-muted fw-bold "  style={{ fontSize: '0.7rem', letterSpacing: '0.1em' }}>
               Inventario TI
             </small>
           </div>
